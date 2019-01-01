@@ -173,7 +173,7 @@ five_words<-data.table(
   word_3 = sapply(strsplit(names(sums_FF), "_", fixed = TRUE), '[[', 3),
   word_4 = sapply(strsplit(names(sums_FF), "_", fixed = TRUE), '[[', 4),
   word_5 = sapply(strsplit(names(sums_FF), "_", fixed = TRUE), '[[', 5),
-  count = sums_F)
+  count = sums_FF)
 
 print("Complete data tables")
 
