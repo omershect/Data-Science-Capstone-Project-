@@ -34,7 +34,7 @@ en_US.Blogs <- readLines(con = "./data/final/en_US/en_US.blogs.txt")
 en_US.news <- readLines(con = "./data/final/en_US/en_US.news.txt")
 en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt")
 
-sample_rate<-30/100
+sample_rate<-70/100
 set.seed(121)
 Sample.Text<-c(sample(en_US.Blogs,length(en_US.Blogs) * (sample_rate),replace = FALSE),
                sample(en_US.news,length(en_US.news) * (sample_rate),replace = FALSE),
@@ -84,65 +84,61 @@ rm(corp)
 stemed_words <- tokens_wordstem(Text.Sentences, language = "english")
 
 rm(Text.Sentences)
- 
-
-print("Create ngrams")
-bi_gram <- tokens_ngrams(stemed_words, n = 2)
-print("complete 2  ngrams")
-tri_gram <- tokens_ngrams(stemed_words, n = 3)
-print("complete 3  ngrams")
-four_gram<- tokens_ngrams(stemed_words, n = 4)
-print("complete 4  ngrams")
-five_gram<- tokens_ngrams(stemed_words, n = 5)
 
 
-print("Complete Creating 1:5 ngrams")
-
+##############################################
+# Create Uni Gram                            #
+#                                            #
+##############################################
 uni_DFM <- dfm(stemed_words)
-rm(stemed_words)
-print("Uni DFM ")
+print("Complete Creating Uni DFM")
+#Trim to Words with Priority higher than 3
+uni_DFM <- dfm_trim(uni_DFM, min_termfreq=3)
+print("Trim Uni Gram")
+
+#Calculate the Col Sum 
+sums_U <- colSums(uni_DFM)
+print("Complete ColSums Uni DFM")
+
+#PAck in Data table 
+uni_words <- data.table(word_1 = names(sums_U), count = sums_U)
+print("Complete uni words ")
+
+
+#Create hash 
+setkey(uni_words, word_1)
+
+#Calculate the Probability 
+uni_words<-mutate(uni_words,Prob=count/sum(count))
+#Save the Results to RDA file 
+save(uni_words, file="uni_words.rda")
+
+print("Complete Saving uni words ")
+
+print(paste0("Number of Uni Words terms: ", dim(uni_words)[1]))
+
+#clear memory 
+rm(uni_DFM)
+rm(sums_U)
+rm(uni_words)
+
+
+##############################################
+# Create Bi Gram                             #
+#                                            #
+##############################################
+
+bi_gram <- tokens_ngrams(stemed_words, n = 2)
 bi_DFM <- dfm(bi_gram)
 rm(bi_gram)
 print("Bi DFM ")
-tri_DFM <- dfm(tri_gram)
-rm(tri_gram)
-print("Tri DFM ")
-four_DFM <- dfm(four_gram)
-print("four DFM ")
-
-rm(four_gram)
-
-five_DFM <- dfm(five_gram)
-print("five DFM ")
-rm(five_gram)
-
-uni_DFM <- dfm_trim(uni_DFM, min_termfreq=4)
-bi_DFM <- dfm_trim(bi_DFM, min_termfreq=4)
-tri_DFM <- dfm_trim(tri_DFM, min_termfreq=4)
-four_DFM <- dfm_trim(four_DFM, min_termfreq=4)
-five_DFM <- dfm_trim(five_DFM, min_termfreq=4)
-
-print("Complete trimming ngrams")
-
-
-
+#Trim - Keep only items with frequancy above 3 
+bi_DFM <- dfm_trim(bi_DFM, min_termfreq=3)
+print("Complete Trim")
 # Create named vectors with counts of words 
-sums_U <- colSums(uni_DFM)
 sums_B <- colSums(bi_DFM)
-sums_T <- colSums(tri_DFM)
-sums_F <- colSums(four_DFM)
-sums_FF <- colSums(five_DFM)
 
-rm(uni_DFM)
 rm(bi_DFM)
-rm(tri_DFM)
-rm(four_DFM)
-rm(five_DFM)
-
-# Create data tables with individual words as columns
-uni_words <- data.table(word_1 = names(sums_U), count = sums_U)
-
-print("Complete uni words ")
 
 bi_words <- data.table(
   word_1 = sapply(strsplit(names(sums_B), "_", fixed = TRUE), '[[', 1),
@@ -151,13 +147,88 @@ bi_words <- data.table(
 
 print("Complete bi words ")
 
+rm(sums_B)
+#Create hash 
+setkey(bi_words, word_1, word_2)
+
+#Calculate regular probability 
+bi_words<-mutate(bi_words,Prob=count/sum(count))
+
+#Save the Results to RDA file 
+save(bi_words, file="bi_words.rda")
+
+print(paste0("Number of Bi Words terms: ", dim(bi_words)[1]))
+
+rm(bi_words)
+print("Complete Saving bi words ")
+
+
+##############################################
+# Create Tri Gram                            #
+#                                            #
+##############################################
+
+
+tri_gram <- tokens_ngrams(stemed_words, n = 3)
+print("complete 3  ngrams")
+
+
+
+tri_DFM <- dfm(tri_gram)
+rm(tri_gram)
+print("Tri DFM ")
+
+
+tri_DFM <- dfm_trim(tri_DFM, min_termfreq=4)
+print("Complete 3 Grams trim")
+
+# Create named vectors with counts of words 
+sums_T <- colSums(tri_DFM)
+rm(tri_DFM)
+
+
+# Create data tables with individual words as columns
 tri_words <- data.table(
   word_1 = sapply(strsplit(names(sums_T), "_", fixed = TRUE), '[[', 1),
   word_2 = sapply(strsplit(names(sums_T), "_", fixed = TRUE), '[[', 2),
   word_3 = sapply(strsplit(names(sums_T), "_", fixed = TRUE), '[[', 3),
   count = sums_T)
 
-print("Complete tri words ")
+rm(sums_T)
+
+print("Complete data tables tri grams")
+
+setkey(tri_words, word_1, word_2, word_3)
+tri_words<-mutate(tri_words,Prob=count/sum(count))
+save(tri_words, file="tri_words.rda")
+print(paste0("Number of Tri Words terms: ", dim(tri_words)[1]))
+rm(tri_words)
+print("Complete Save tri words")
+
+
+
+
+##############################################
+# Create Four Gram                          #
+#                                            #
+##############################################
+
+
+
+four_gram<- tokens_ngrams(stemed_words, n = 4)
+print("complete 4  ngrams")
+
+four_DFM <- dfm(four_gram)
+print("four DFM ")
+
+rm(four_gram)
+
+four_DFM <- dfm_trim(four_DFM, min_termfreq=4)
+print("Complete Trim 4 grams")
+
+# Create named vectors with counts of words 
+sums_F <- colSums(four_DFM)
+rm(four_DFM)
 
 four_words<-data.table(
   word_1 = sapply(strsplit(names(sums_F), "_", fixed = TRUE), '[[', 1),
@@ -166,7 +237,43 @@ four_words<-data.table(
   word_4 = sapply(strsplit(names(sums_F), "_", fixed = TRUE), '[[', 4),
   count = sums_F)
 
+print("Complete data tables 4 grams")
 
+rm(sums_F)
+
+setkey(four_words, word_1, word_2, word_3,word_4)
+four_words<-mutate(four_words,Prob=count/sum(count))
+save(four_words, file="four_words.rda")
+print("complete save 4 words")
+print(paste0("Number of Four Words terms: ", dim(four_words)[1]))
+
+rm(four_words)
+
+
+
+##############################################
+# Create Five Gram                           #
+#                                            #
+##############################################
+
+
+
+five_gram<- tokens_ngrams(stemed_words, n = 5)
+print("complete 5  ngrams")
+
+five_DFM <- dfm(five_gram)
+print("five DFM ")
+rm(five_gram)
+
+five_DFM <- dfm_trim(five_DFM, min_termfreq=4)
+print("Complete trimming  5 ngrams")
+
+# Create named vectors with counts of words 
+sums_FF <- colSums(five_DFM)
+
+rm(five_DFM)
+
+# Create data tables with individual words as columns
 five_words<-data.table(
   word_1 = sapply(strsplit(names(sums_FF), "_", fixed = TRUE), '[[', 1),
   word_2 = sapply(strsplit(names(sums_FF), "_", fixed = TRUE), '[[', 2),
@@ -175,31 +282,22 @@ five_words<-data.table(
   word_5 = sapply(strsplit(names(sums_FF), "_", fixed = TRUE), '[[', 5),
   count = sums_FF)
 
-print("Complete data tables")
+print("Complete data tables 5 grams")
 
-setkey(uni_words, word_1)
-setkey(bi_words, word_1, word_2)
-setkey(tri_words, word_1, word_2, word_3)
-setkey(four_words, word_1, word_2, word_3,word_4)
+rm(sums_FF)
+
 setkey(five_words, word_1, word_2, word_3,word_4,word_5)
-
-#Calculate regular probability 
-uni_words<-mutate(uni_words,Prob=count/sum(count))
-bi_words<-mutate(bi_words,Prob=count/sum(count))
-tri_words<-mutate(tri_words,Prob=count/sum(count))
-four_words<-mutate(four_words,Prob=count/sum(count))
 five_words<-mutate(five_words,Prob=count/sum(count))
-
-
-print("Results")
-cat("Sample Rate is:",sample_rate)
-cat("Number of Uni Words terms:",dim(uni_words)[1])
-cat("Number of bi Words terms:",dim(bi_words)[1])
-cat("Number of tri Words terms:",dim(tri_words)[1])
-cat("Number of quad Words terms:",dim(four_words)[1])
-
-save(uni_words, file="uni_words.rda")
-save(bi_words, file="bi_words.rda")
-save(tri_words, file="tri_words.rda")
-save(four_words, file="four_words.rda")
 save(five_words, file="five_words.rda")
+print(paste0("Number of Five Words terms: ", dim(five_words)[1]))
+
+
+
+
+
+
+
+
+
+
+
