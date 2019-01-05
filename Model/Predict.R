@@ -14,7 +14,7 @@ load("four_words.rda")
 load("five_words.rda")
 
 #Function to predict the next word based on a string 
-Predict_Word <- function(str){
+Predict_Simple_Back_of <- function(str){
   
   n<-sapply(strsplit(str, " "), length)
   
@@ -75,3 +75,15 @@ Predict_Word <- function(str){
   
   
 }
+
+
+
+Predict_Words <- function(str){
+  
+Words<-Predict_Simple_Back_of(str)
+res<-select(Words,Word)[1:3,]
+return (list(res))
+  
+}
+
+
