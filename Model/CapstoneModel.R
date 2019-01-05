@@ -12,7 +12,11 @@ library(stringi)
 
 
 
-## Load the Data 
+
+##############################################
+# Load Data                                  #
+#                                            #
+##############################################
 
 ### Read the data and unzip it
 
@@ -29,17 +33,26 @@ if(!file.exists("./data/Coursera-SwiftKey.zip")) {
     unzip("./data/Coursera-SwiftKey.zip",exdir="./data") 
 }
 
-
+#Read the three sources of data 
 en_US.Blogs <- readLines(con = "./data/final/en_US/en_US.blogs.txt")
 en_US.news <- readLines(con = "./data/final/en_US/en_US.news.txt")
 en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt")
 
+
+#################################################
+# Sample the data and split to train and test.  #
+#                                               #
+#################################################
+
+
+#Sample the data (70%) due to memory limitations
 sample_rate<-70/100
 set.seed(121)
 Sample.Text<-c(sample(en_US.Blogs,length(en_US.Blogs) * (sample_rate),replace = FALSE),
                sample(en_US.news,length(en_US.news) * (sample_rate),replace = FALSE),
                sample(en_US.twitter,length(en_US.twitter) * (sample_rate),replace = FALSE))
 
+#Clean memory 
 rm(en_US.Blogs)
 rm(en_US.news)
 rm(en_US.twitter) 
@@ -47,21 +60,36 @@ rm(en_US.twitter)
 print("Complete Loading data")
 
 
+
 #Convert the Sample.txt vector to a Data frame 
 DF <- data_frame(text = Sample.Text)
 rm(Sample.Text)
 
+#Split the data into train and test sets
 n = nrow(DF)
 set.seed(101)
 trainIndex = sample(1:n, size = round(0.9*n), replace=FALSE)
 train = DF[trainIndex ,]
 test = DF[-trainIndex ,]
 
+#Clean memory 
 rm(DF)
 
+
+
+##############################################
+# Clean the Data and create tokens           #
+#                                            #
+##############################################
+
+
 print ("Create Corpus")
+#Create Corpus
 corp <- corpus(train)
 rm(train)
+
+#save test data for validation 
+save(test, file="test_data.rda")
 #Remove all non English words 
 corp<-corpus(iconv(texts(corp), from = "UTF-8", to = "ASCII", sub = ""))
 
@@ -81,6 +109,8 @@ Text.Sentences <- tokens(
 print("Complete cleaning and Creating Corpus")
 
 rm(corp)
+
+#Create tokens 
 stemed_words <- tokens_wordstem(Text.Sentences, language = "english")
 
 rm(Text.Sentences)
@@ -140,6 +170,7 @@ sums_B <- colSums(bi_DFM)
 
 rm(bi_DFM)
 
+# Create data tables with individual words as columns
 bi_words <- data.table(
   word_1 = sapply(strsplit(names(sums_B), "_", fixed = TRUE), '[[', 1),
   word_2 = sapply(strsplit(names(sums_B), "_", fixed = TRUE), '[[', 2),
@@ -151,7 +182,7 @@ rm(sums_B)
 #Create hash 
 setkey(bi_words, word_1, word_2)
 
-#Calculate regular probability 
+#Calculate probability 
 bi_words<-mutate(bi_words,Prob=count/sum(count))
 
 #Save the Results to RDA file 
@@ -197,8 +228,9 @@ tri_words <- data.table(
 rm(sums_T)
 
 print("Complete data tables tri grams")
-
+#Create hash 
 setkey(tri_words, word_1, word_2, word_3)
+#Calculate probability 
 tri_words<-mutate(tri_words,Prob=count/sum(count))
 save(tri_words, file="tri_words.rda")
 print(paste0("Number of Tri Words terms: ", dim(tri_words)[1]))
@@ -230,6 +262,7 @@ print("Complete Trim 4 grams")
 sums_F <- colSums(four_DFM)
 rm(four_DFM)
 
+# Create data tables with individual words as columns
 four_words<-data.table(
   word_1 = sapply(strsplit(names(sums_F), "_", fixed = TRUE), '[[', 1),
   word_2 = sapply(strsplit(names(sums_F), "_", fixed = TRUE), '[[', 2),
@@ -240,8 +273,9 @@ four_words<-data.table(
 print("Complete data tables 4 grams")
 
 rm(sums_F)
-
+#Create hash 
 setkey(four_words, word_1, word_2, word_3,word_4)
+#Calculate probability 
 four_words<-mutate(four_words,Prob=count/sum(count))
 save(four_words, file="four_words.rda")
 print("complete save 4 words")
@@ -285,8 +319,9 @@ five_words<-data.table(
 print("Complete data tables 5 grams")
 
 rm(sums_FF)
-
+#Create hash 
 setkey(five_words, word_1, word_2, word_3,word_4,word_5)
+#Calculate probability 
 five_words<-mutate(five_words,Prob=count/sum(count))
 save(five_words, file="five_words.rda")
 print(paste0("Number of Five Words terms: ", dim(five_words)[1]))
