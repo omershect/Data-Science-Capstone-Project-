@@ -10,7 +10,7 @@ library(data.table)
 library(stringi)
 
 
-
+memory.limit(size = 100000) 
 
 
 ##############################################
@@ -46,7 +46,7 @@ en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt")
 
 
 #Sample the data (70%) due to memory limitations
-sample_rate<-70/100
+sample_rate<-95/100
 set.seed(121)
 Sample.Text<-c(sample(en_US.Blogs,length(en_US.Blogs) * (sample_rate),replace = FALSE),
                sample(en_US.news,length(en_US.news) * (sample_rate),replace = FALSE),
@@ -111,8 +111,8 @@ print("Complete cleaning and Creating Corpus")
 rm(corp)
 
 #Create tokens 
-stemed_words <- tokens_wordstem(Text.Sentences, language = "english")
-
+#stemed_words <- tokens_wordstem(Text.Sentences, language = "english")
+stemed_words<-Text.Sentences
 rm(Text.Sentences)
 
 
@@ -210,7 +210,7 @@ rm(tri_gram)
 print("Tri DFM ")
 
 
-tri_DFM <- dfm_trim(tri_DFM, min_termfreq=4)
+tri_DFM <- dfm_trim(tri_DFM, min_termfreq=3)
 print("Complete 3 Grams trim")
 
 # Create named vectors with counts of words 
@@ -255,7 +255,7 @@ print("four DFM ")
 
 rm(four_gram)
 
-four_DFM <- dfm_trim(four_DFM, min_termfreq=4)
+four_DFM <- dfm_trim(four_DFM, min_termfreq=3)
 print("Complete Trim 4 grams")
 
 # Create named vectors with counts of words 
@@ -299,7 +299,7 @@ five_DFM <- dfm(five_gram)
 print("five DFM ")
 rm(five_gram)
 
-five_DFM <- dfm_trim(five_DFM, min_termfreq=4)
+five_DFM <- dfm_trim(five_DFM, min_termfreq=3)
 print("Complete trimming  5 ngrams")
 
 # Create named vectors with counts of words 
