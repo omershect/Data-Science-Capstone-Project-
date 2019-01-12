@@ -30,9 +30,19 @@ setkey(five_words, word_1, word_2, word_3,word_4,word_5)
 Predict_Simple_Back_of <- function(str,Ngram = 5){
   
   
+  uni_words<-data.table(uni_words)
+  setkey(uni_words, word_1)
+  
+  
   n<-sapply(strsplit(str," "), length)
    
-  tokens <- tokens(x = char_tolower(str),remove_punct = TRUE)
+  tokens <- tokens(x = char_tolower(str),remove_punct = TRUE,
+      remove_twitter = TRUE,
+    remove_numbers = TRUE,
+    removeNumbers  = TRUE,
+    remove_hyphens = TRUE,
+    remove_symbols = TRUE,
+    remove_url = TRUE)
   
   word1<-""
   word2<-""
@@ -73,14 +83,10 @@ Predict_Simple_Back_of <- function(str,Ngram = 5){
         Words5<-mutate(Words5,Prob=count/Count4Grams)
         Words5<-select(Words5,word_5,Prob)
         names(Words5)<-c("word","Prob")
+        Words5_length<-dim(Words5)[1]
     } else {
-      
-       Words5<-select(Five_Gram_Search,word_5,count)
-       Words5<-mutate(Words5,Prob=0)
-       Words5<-select(Words5,word_5,Prob)
-       names(Words5)<-c("word","Prob")
-       Words5$Prob<-0
-       Words5$word<-"dummy"
+      Words5_length<-0
+       
      }
   
   
@@ -94,14 +100,10 @@ if (dim(Four_Gram_Search_NoNA)[1]>0){
       Words4<-mutate(Words4,Prob= ((0.4 * count)/Count3Grams))
       Words4<-select(Words4,word_4,Prob)
       names(Words4)<-c("word","Prob")
+      Words4_length<-dim(Words4)[1]
 } else {
+  Words4_length<-0
   
-    Words4<-select(Four_Gram_Search,word_4,count)
-    Words4<-mutate(Words4,Prob=0)
-    Words4<-select(Words4,word_4,Prob)
-    names(Words4)<-c("word","Prob")
-    Words4$Prob<-0
-    Words4$word<-"dummy"
 }
   
 #Tree_Gram_Search<- subset(tri_words,word_1==word3 & word_2==word4)
@@ -114,52 +116,62 @@ if (dim(Tree_Gram_Search_NoNA)[1]>0){
       Words3<-mutate(Words3,Prob= ((0.4 * 0.4 * count)/Count2Grams))
       Words3<-select(Words3,word_3,Prob)
       names(Words3)<-c("word","Prob")
+      Words3_length<-dim(Words3)[1]
 } else {
+  Words3_length<-0
   
-    Words3<-select(Tree_Gram_Search,word_3,count)
-    Words3<-mutate(Words3,Prob=0)
-    Words3<-select(Words3,word_3,Prob)
-    names(Words3)<-c("word","Prob")
-    Words3$Prob<-0
-    Words3$word<-"dummy"
 }
   
   
 #Bi_Gram_Search<- subset(bi_words,word_1==word4)
   Bi_Gram_Search<-bi_words[.(word4)]
   Bi_Gram_Search_NoNA<-na.omit (Bi_Gram_Search, "count") 
-  if (dim(Bi_Gram_Search)[1]>0){
+  if (dim(Bi_Gram_Search_NoNA)[1]>0){
     #Count1Grams<-subset(uni_words,word_1==word4)$count 
     Count1Grams<-uni_words[.(word4)]$count
     Words2<-select(Bi_Gram_Search,word_2,count)
     Words2<-mutate(Words2,Prob= ((0.4 *0.4 * 0.4 * count)/Count1Grams))
     Words2<-select(Words2,word_2,Prob)
     names(Words2)<-c("word","Prob")
-    
-  }else {
-    Words2<-select(Bi_Gram_Search,word_2,count)
-    Words2<-mutate(Words2,Prob=0)
-    Words2<-select(Words2,word_2,Prob)
-    names(Words2)<-c("word","Prob")
-    Words2$Prob<-0
-    Words2$word<-"dummy"
+    Words2_length<-dim(Words2)[1]
+  } else {
+    Words2_length<-0
     
   }
+  Pwords<-""
+  PredictLength<-Words5_length+Words4_length+Words4_length+Words4_length
+  if(Words5_length>0)
+    Pwords<-Words5
+  if(Words4_length>0)
+    Pwords<-rbind(Pwords,Words4)
+  if(Words3_length>0)
+    Pwords<-rbind(Pwords,Words3)
+  if(Words2_length>0)
+    Pwords<-rbind(Pwords,Words2)
+  if(PredictLength>0)
+    Pwords<-Pwords[!duplicated(Pwords$word),]
   
-  
-  words<-rbind(Words4,Words5,Words3,Words2)
-  words<-words[!duplicated(words$word),]
   
   #in case the search find less then 5 words - complete with words with highest 
   # probabilty from Uni gram
-  #if(dim(words)[1] < 5) {
-  #  setorder(uni_words,colS=-Prob) 
-  #  n_complete<- 5-(dim(words))[1]
-  #}
-    
-  
-  setorder(words,colS=-Prob)
-  return(words)
+  if(PredictLength < 5) {
+    uni<-uni_words
+    UniWordsHigh<-select(head(setorder(uni,colS=-Prob),5 ),word_1,Prob)
+    names(UniWordsHigh)<-c("word","Prob")
+    if (PredictLength == 0)
+      Pwords<-UniWordsHigh
+    if (PredictLength == 1)
+      Pwords<-rbind(Pwords,head(UniWordsHigh,4))
+    if (PredictLength == 2)
+      Pwords<-rbind(Pwords,head(UniWordsHigh,3))
+    if (PredictLength == 3)
+      Pwords<-rbind(Pwords,head(UniWordsHigh,2))
+    if (PredictLength == 4)
+      Pwords<-rbind(Pwords,head(UniWordsHigh,1))
+  }
+  else
+    setorder(Pwords,colS=-Prob)
+  return(Pwords)
   
   
 }
@@ -170,7 +182,7 @@ Predict_Words <- function(str,Ngram=5){
   
 Words<-Predict_Simple_Back_of(str,Ngram)
 res<-select(Words,word)[1:3,]
-return (list(res))
+return ((res))
 
 
 
@@ -182,9 +194,13 @@ return (list(res))
 predict.baseline<-function(x){
   
   
-  if (x=="" | x==" ") x<-"the"
+  #if (x=="" | x==" ") x<-"the"
+  print(unname(x))
+  x<-unname(x)
+  x<-iconv(x,"UTF-8","ASCII")
   word<-Predict_Words(unname(x))
-  return(word)
+  #print(word)
+  return(iconv(word, "ASCII", "UTF-8"))
   
 }
 
