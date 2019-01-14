@@ -34,9 +34,9 @@ if(!file.exists("./data/Coursera-SwiftKey.zip")) {
 }
 
 #Read the three sources of data 
-en_US.Blogs <- readLines(con = "./data/final/en_US/en_US.blogs.txt")
-en_US.news <- readLines(con = "./data/final/en_US/en_US.news.txt")
-en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt")
+en_US.Blogs <- readLines(con = "./data/final/en_US/en_US.blogs.txt",encoding = "UTF-8")
+en_US.news <- readLines(con = "./data/final/en_US/en_US.news.txt",encoding = "UTF-8")
+en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt",encoding = "UTF-8")
 
 
 #################################################
@@ -45,12 +45,11 @@ en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt")
 #################################################
 
 
-#Sample the data (70%) due to memory limitations
-sample_rate<-95/100
+
+sample_rate<-100/100
+sample_tweet_rate<-100/100
 set.seed(121)
-Sample.Text<-c(sample(en_US.Blogs,length(en_US.Blogs) * (sample_rate),replace = FALSE),
-               sample(en_US.news,length(en_US.news) * (sample_rate),replace = FALSE),
-               sample(en_US.twitter,length(en_US.twitter) * (sample_rate),replace = FALSE))
+Sample.Text<-c(en_US.Blogs,en_US.news,en_US.twitter)
 
 #Clean memory 
 rm(en_US.Blogs)
@@ -86,6 +85,9 @@ rm(DF)
 print ("Create Corpus")
 #Create Corpus
 corp <- corpus(train)
+
+
+
 rm(train)
 
 #save test data for validation 
@@ -100,9 +102,9 @@ Text.Sentences <- tokens(
   remove_punct = TRUE,
   remove_twitter = TRUE,
   remove_numbers = TRUE,
-  removeNumbers  = TRUE,
   remove_hyphens = TRUE,
   remove_symbols = TRUE,
+  remove_separators = TRUE,
   remove_url = TRUE)
 
 
@@ -122,7 +124,7 @@ rm(Text.Sentences)
 ##############################################
 uni_DFM <- dfm(stemed_words)
 print("Complete Creating Uni DFM")
-#Trim to Words with Priority higher than 3
+#Trim to Words with Priority higher than 2
 uni_DFM <- dfm_trim(uni_DFM, min_termfreq=3)
 print("Trim Uni Gram")
 
@@ -137,9 +139,11 @@ print("Complete uni words ")
 
 #Create hash 
 setkey(uni_words, word_1)
-
-#Calculate the Probability 
+#Calculate Probability
 uni_words<-mutate(uni_words,Prob=count/sum(count))
+
+#Remove long words 
+uni_words<-(subset(uni_words,nchar(word_1)<12))
 #Save the Results to RDA file 
 save(uni_words, file="uni_words.rda")
 
@@ -162,7 +166,7 @@ bi_gram <- tokens_ngrams(stemed_words, n = 2)
 bi_DFM <- dfm(bi_gram)
 rm(bi_gram)
 print("Bi DFM ")
-#Trim - Keep only items with frequancy above 3 
+#Trim - Keep only items with frequancy above 2
 bi_DFM <- dfm_trim(bi_DFM, min_termfreq=3)
 print("Complete Trim")
 # Create named vectors with counts of words 
@@ -182,8 +186,8 @@ rm(sums_B)
 #Create hash 
 setkey(bi_words, word_1, word_2)
 
-#Calculate probability 
-bi_words<-mutate(bi_words,Prob=count/sum(count))
+#Remove Long words 
+bi_words<-subset(bi_words,(nchar(word_1)<12) & nchar(word_2)<12)
 
 #Save the Results to RDA file 
 save(bi_words, file="bi_words.rda")
@@ -230,8 +234,11 @@ rm(sums_T)
 print("Complete data tables tri grams")
 #Create hash 
 setkey(tri_words, word_1, word_2, word_3)
-#Calculate probability 
-tri_words<-mutate(tri_words,Prob=count/sum(count))
+
+#Remove Long words 
+tri_words<-subset(tri_words,(nchar(word_1)<12) & nchar(word_2)<12 & nchar(word_3)<12)
+
+
 save(tri_words, file="tri_words.rda")
 print(paste0("Number of Tri Words terms: ", dim(tri_words)[1]))
 rm(tri_words)
@@ -275,8 +282,10 @@ print("Complete data tables 4 grams")
 rm(sums_F)
 #Create hash 
 setkey(four_words, word_1, word_2, word_3,word_4)
-#Calculate probability 
-four_words<-mutate(four_words,Prob=count/sum(count))
+
+#Remove Long words 
+four_words<-subset(four_words,(nchar(word_1)<12) & nchar(word_2)<12 & nchar(word_3)<12 & nchar(word_4)<12)
+
 save(four_words, file="four_words.rda")
 print("complete save 4 words")
 print(paste0("Number of Four Words terms: ", dim(four_words)[1]))
@@ -321,8 +330,10 @@ print("Complete data tables 5 grams")
 rm(sums_FF)
 #Create hash 
 setkey(five_words, word_1, word_2, word_3,word_4,word_5)
-#Calculate probability 
-five_words<-mutate(five_words,Prob=count/sum(count))
+
+#Remove Long words 
+five_words<-subset(five_words,(nchar(word_1)<13) & nchar(word_2)<12 & nchar(word_3)<12 & nchar(word_4)<12 & nchar(word_5)<12)
+
 save(five_words, file="five_words.rda")
 print(paste0("Number of Five Words terms: ", dim(five_words)[1]))
 

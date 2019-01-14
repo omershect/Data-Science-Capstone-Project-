@@ -67,18 +67,18 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
       word4<-tokens$text1[n]
   }
   
-  if (n>=3 ) {
+  if (n==3 ) {
       word2<-tokens$text1[n-2]
       word3<-tokens$text1[n-1]
       word4<-tokens$text1[n]
   }
   
-  if (n>=2 ) {
+  if (n==2 ) {
       word3<-tokens$text1[n-1]
       word4<-tokens$text1[n]
   }
   
-  if (n>=1 ) 
+  if (n==1 ) 
     word4<-tokens$text1[n]
   if (n==0 )
     word4<-" "
@@ -92,11 +92,12 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
   
   #Search 5 Grams 
   #And calculate the probabilty 
-  Five_Gram_Search<-five_words[.(word1,word2,word3,word4)]
-  #If The last word is NA - No match - Remove the entire row
-  Five_Gram_Search_NoNA<-na.omit (Five_Gram_Search, "count") 
-  #If there is at least one occurrence calculate the probability 
-  if (dim(Five_Gram_Search_NoNA)[1]>0){
+  if (n>=4) {
+    Five_Gram_Search<-five_words[.(word1,word2,word3,word4)]
+    #If The last word is NA - No match - Remove the entire row
+    Five_Gram_Search_NoNA<-na.omit (Five_Gram_Search, "count") 
+    #If there is at least one occurrence calculate the probability 
+    if (dim(Five_Gram_Search_NoNA)[1]>0){
        
         Count4Grams<-four_words[.(word1,word2,word3,word4)]$count
         Words5<-select(Five_Gram_Search,word_5,count)
@@ -104,15 +105,17 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
         Words5<-select(Words5,word_5,Prob)
         names(Words5)<-c("word","Prob")
         Words5_length<-dim(Words5)[1]
-  } 
-#update the length   
-PredictLength<-PredictLength+Words5_length
+    } 
+  }
+ #update the length   
+ PredictLength<-PredictLength+Words5_length
 
-if (PredictLength<NoOfWordtoReturn) {  
-  #Four_Gram_Search<- subset(four_words,word_1==word2 & word_2==word3 & word_3==word4)
-  Four_Gram_Search<-four_words[.(word2,word3,word4)]
-  Four_Gram_Search_NoNA<-na.omit (Four_Gram_Search, "count") 
-  if (dim(Four_Gram_Search_NoNA)[1]>0){
+ if (n>=3) {
+  if (PredictLength<NoOfWordtoReturn) {  
+    #Four_Gram_Search<- subset(four_words,word_1==word2 & word_2==word3 & word_3==word4)
+    Four_Gram_Search<-four_words[.(word2,word3,word4)]
+    Four_Gram_Search_NoNA<-na.omit (Four_Gram_Search, "count") 
+    if (dim(Four_Gram_Search_NoNA)[1]>0){
       #Count3Grams<-subset(tri_words, word_1==word2 & word_2==word3 & word_3==word4)$count 
       Count3Grams<-tri_words[.(word2,word3,word4)]$count 
       Words4<-select(Four_Gram_Search,word_4,count)
@@ -120,20 +123,18 @@ if (PredictLength<NoOfWordtoReturn) {
       Words4<-select(Words4,word_4,Prob)
       names(Words4)<-c("word","Prob")
       Words4_length<-dim(Words4)[1]
-  } else {
-    Words4_length<-0
-  
+   } 
   }
-}
+ }
  
 PredictLength<-PredictLength+Words4_length
-  
-if (PredictLength<NoOfWordtoReturn) {  
+  if (n>=2) {
+  if (PredictLength<NoOfWordtoReturn) {  
    
-  #Tree_Gram_Search<- subset(tri_words,word_1==word3 & word_2==word4)
-  Tree_Gram_Search<-tri_words[.(word3,word4)]
-  Tree_Gram_Search_NoNA<-na.omit (Tree_Gram_Search, "count") 
-  if (dim(Tree_Gram_Search_NoNA)[1]>0){
+    #Tree_Gram_Search<- subset(tri_words,word_1==word3 & word_2==word4)
+    Tree_Gram_Search<-tri_words[.(word3,word4)]
+    Tree_Gram_Search_NoNA<-na.omit (Tree_Gram_Search, "count") 
+    if (dim(Tree_Gram_Search_NoNA)[1]>0){
       #Count2Grams<-subset(bi_words,word_1==word3 & word_2==word4)$count 
       Count2Grams<-bi_words[.(word3,word4)]$count
       Words3<-select(Tree_Gram_Search,word_3,count)
@@ -141,31 +142,27 @@ if (PredictLength<NoOfWordtoReturn) {
       Words3<-select(Words3,word_3,Prob)
       names(Words3)<-c("word","Prob")
       Words3_length<-dim(Words3)[1]
-  } else {
-    Words3_length<-0
-  
+    } 
   }
-}
-  
-PredictLength<-PredictLength+Words3_length  
-if (PredictLength<NoOfWordtoReturn) {  
-  #Bi_Gram_Search<- subset(bi_words,word_1==word4)
-  Bi_Gram_Search<-bi_words[.(word4)]
-  Bi_Gram_Search_NoNA<-na.omit (Bi_Gram_Search, "count") 
-  if (dim(Bi_Gram_Search_NoNA)[1]>0){
-    #Count1Grams<-subset(uni_words,word_1==word4)$count 
-    Count1Grams<-uni_words[.(word4)]$count
-    Words2<-select(Bi_Gram_Search,word_2,count)
-    Words2<-mutate(Words2,Prob= ((0.4 *0.4 * 0.4 * count)/Count1Grams))
-    Words2<-select(Words2,word_2,Prob)
-    names(Words2)<-c("word","Prob")
-    Words2_length<-dim(Words2)[1]
-  } else {
-    Words2_length<-0
-    
+ }
+PredictLength<-PredictLength+Words3_length 
+
+if (n>=1) {
+  if (PredictLength<NoOfWordtoReturn) {  
+    #Bi_Gram_Search<- subset(bi_words,word_1==word4)
+    Bi_Gram_Search<-bi_words[.(word4)]
+    Bi_Gram_Search_NoNA<-na.omit (Bi_Gram_Search, "count") 
+    if (dim(Bi_Gram_Search_NoNA)[1]>0){
+      #Count1Grams<-subset(uni_words,word_1==word4)$count 
+      Count1Grams<-uni_words[.(word4)]$count
+      Words2<-select(Bi_Gram_Search,word_2,count)
+      Words2<-mutate(Words2,Prob= ((0.4 *0.4 * 0.4 * count)/Count1Grams))
+      Words2<-select(Words2,word_2,Prob)
+      names(Words2)<-c("word","Prob")
+      Words2_length<-dim(Words2)[1]
+    } 
   }
-  
-}
+ }
 
 
 
@@ -177,12 +174,25 @@ if (PredictLength<NoOfWordtoReturn) {
   
   if(Words5_length>0)
     Pwords<-Words5
+  
   if(Words4_length>0)
-    Pwords<-rbind(Pwords,Words4)
+    if(class(Pwords)!="data.frame")
+      Pwords<-Words4
+    else
+      Pwords<-rbind(Pwords,Words4)
+  
   if(Words3_length>0)
-    Pwords<-rbind(Pwords,Words3)
+    if(class(Pwords)!="data.frame")
+      Pwords<-Words3
+    else
+      Pwords<-rbind(Pwords,Words3)
+  
   if(Words2_length>0)
-    Pwords<-rbind(Pwords,Words2)
+    if(class(Pwords)!="data.frame")
+      Pwords<-Words2
+  else
+     Pwords<-rbind(Pwords,Words2)
+  
   if(PredictLength>0)
     Pwords<-Pwords[!duplicated(Pwords$word),]
   
