@@ -15,6 +15,7 @@ load("tri_words.rda")
 load("four_words.rda")
 load("five_words.rda")
 
+#Create Hash tables from the ...
 uni_words<-data.table(uni_words)
 setkey(uni_words, word_1)
 bi_words<-data.table(bi_words)
@@ -30,7 +31,18 @@ setkey(five_words, word_1, word_2, word_3,word_4,word_5)
 #########################################################
 #                                                       #
 #Function to predict the next word based on a string    #
-
+# This Function uses the Five N Grams data tables       #
+# To Predict the next word                              #
+# This function uses the Simple Stupied Backoff         #
+# Algorithem.                                           #
+# Paramters :                                           #
+#                                                       #
+#                                                       #
+# str - String Sentence (any lenggth , can be also      #
+# empty)                                                #
+#                                                       #
+# NoOfWordtoReturn - Number of Predicted word to        #
+# return                                                #
 #########################################################
 
 
@@ -40,11 +52,14 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
   uni_words<-data.table(uni_words)
   setkey(uni_words, word_1)
   
+  #Remove non-English characters
   str<-iconv(str, from = "UTF-8", to = "ASCII", sub = "")
+  
   #Calculate the length of the sentence
   n<-sapply(strsplit(str," "), length)
    
   #Convert the sentence into tokens
+  #Remove numbers, symbols, twitter,  and hyphens
   tokens <- tokens(x = char_tolower(str),remove_punct = TRUE,
     remove_twitter = TRUE,
     remove_numbers = TRUE,
@@ -53,7 +68,7 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
     remove_symbols = TRUE,
     remove_separators = TRUE,
     remove_url = TRUE)
-  
+  #Init Word variables - 
   word1<-""
   word2<-""
   word3<-""
@@ -84,13 +99,19 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
     word4<-" "
   
   #Initiliaze the length parameters 
+  #Overall Length 
   PredictLength<-0
+  #Specific Length search 
   Words5_length<-0
   Words4_length<-0
   Words3_length<-0
   Words2_length<-0
   
-  #Search 5 Grams 
+  ################################
+  # Search 5 Grams               #
+  #                              #
+  ################################
+  
   #And calculate the probabilty 
   if (n>=4) {
     Five_Gram_Search<-five_words[.(word1,word2,word3,word4)]
@@ -98,36 +119,58 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
     Five_Gram_Search_NoNA<-na.omit (Five_Gram_Search, "count") 
     #If there is at least one occurrence calculate the probability 
     if (dim(Five_Gram_Search_NoNA)[1]>0){
-       
+        
+        #Get the frequency of the term that was found
         Count4Grams<-four_words[.(word1,word2,word3,word4)]$count
+        #Select the word that was found
         Words5<-select(Five_Gram_Search,word_5,count)
+        #Calculate the Probability (Count of the specific term in the 5th gram/count of the input term in 4th gram)
         Words5<-mutate(Words5,Prob=count/Count4Grams)
+        # Select Word and Probabilty and name them 
         Words5<-select(Words5,word_5,Prob)
         names(Words5)<-c("word","Prob")
+        #Calculate the number of words found 
         Words5_length<-dim(Words5)[1]
     } 
   }
- #update the length   
+ #update the overall number of words found    
  PredictLength<-PredictLength+Words5_length
 
+ 
+ ################################
+ # Search 4 Grams               #
+ #                              #
+ ################################
+ 
  if (n>=3) {
   if (PredictLength<NoOfWordtoReturn) {  
-    #Four_Gram_Search<- subset(four_words,word_1==word2 & word_2==word3 & word_3==word4)
+    #Get the frequency of the term that was found
     Four_Gram_Search<-four_words[.(word2,word3,word4)]
     Four_Gram_Search_NoNA<-na.omit (Four_Gram_Search, "count") 
     if (dim(Four_Gram_Search_NoNA)[1]>0){
-      #Count3Grams<-subset(tri_words, word_1==word2 & word_2==word3 & word_3==word4)$count 
+      #Get the frequency of the term that was found
       Count3Grams<-tri_words[.(word2,word3,word4)]$count 
+      #Calculate the Probability (Count of the specific term in the 4th gram/count of the input term in 3th gram and
+      # multiple by the factor))
       Words4<-select(Four_Gram_Search,word_4,count)
       Words4<-mutate(Words4,Prob= ((0.4 * count)/Count3Grams))
+      # Select Word and Probabilty and name them 
       Words4<-select(Words4,word_4,Prob)
       names(Words4)<-c("word","Prob")
+      #Calculate the number of words found 
       Words4_length<-dim(Words4)[1]
    } 
   }
  }
  
 PredictLength<-PredictLength+Words4_length
+
+################################
+# Search 3 Grams               #
+#                              #
+################################
+
+
   if (n>=2) {
   if (PredictLength<NoOfWordtoReturn) {  
    
@@ -135,17 +178,29 @@ PredictLength<-PredictLength+Words4_length
     Tree_Gram_Search<-tri_words[.(word3,word4)]
     Tree_Gram_Search_NoNA<-na.omit (Tree_Gram_Search, "count") 
     if (dim(Tree_Gram_Search_NoNA)[1]>0){
-      #Count2Grams<-subset(bi_words,word_1==word3 & word_2==word4)$count 
+      #Get the frequency of the term that was found
       Count2Grams<-bi_words[.(word3,word4)]$count
       Words3<-select(Tree_Gram_Search,word_3,count)
+      #Calculate the Probability (Count of the specific term in the 3rd gram/count of the input term in 2nd gram
+      #and multiply by the factor))
       Words3<-mutate(Words3,Prob= ((0.4 * 0.4 * count)/Count2Grams))
+      # Select Word and Probabilty and name them 
       Words3<-select(Words3,word_3,Prob)
       names(Words3)<-c("word","Prob")
+      #Calculate the number of words found 
       Words3_length<-dim(Words3)[1]
     } 
   }
- }
-PredictLength<-PredictLength+Words3_length 
+  }
+ #update the overall number of words found    
+ PredictLength<-PredictLength+Words3_length 
+ 
+ 
+ ################################
+ # Search 2 Grams               #
+ #                              #
+ ################################
+ 
 
 if (n>=1) {
   if (PredictLength<NoOfWordtoReturn) {  
@@ -153,12 +208,16 @@ if (n>=1) {
     Bi_Gram_Search<-bi_words[.(word4)]
     Bi_Gram_Search_NoNA<-na.omit (Bi_Gram_Search, "count") 
     if (dim(Bi_Gram_Search_NoNA)[1]>0){
-      #Count1Grams<-subset(uni_words,word_1==word4)$count 
+      #Get the frequency of the term that was found
       Count1Grams<-uni_words[.(word4)]$count
       Words2<-select(Bi_Gram_Search,word_2,count)
+      #Calculate the Probability (Count of the specific term in the second gram/count of the input term in first gram and
+      # multiple by the factor)
       Words2<-mutate(Words2,Prob= ((0.4 *0.4 * 0.4 * count)/Count1Grams))
+      # Select Word and Probabilty and name them 
       Words2<-select(Words2,word_2,Prob)
       names(Words2)<-c("word","Prob")
+      #Calculate the number of words found 
       Words2_length<-dim(Words2)[1]
     } 
   }
@@ -167,9 +226,11 @@ if (n>=1) {
 
 
 
-
-
-
+  #############################
+  #Combine all search results #
+  #                           #
+  #############################
+ 
   Pwords<-""
   
   if(Words5_length>0)
@@ -196,7 +257,12 @@ if (n>=1) {
   if(PredictLength>0)
     Pwords<-Pwords[!duplicated(Pwords$word),]
   
-  
+  #######################################
+  # 1 Gram                              #
+  # If no words found (or not enough)   #
+  # Use Uni gram                        #
+  #######################################
+ 
   #in case the search find less then 5 words - complete with words with highest 
   # probabilty from Uni gram
   if(PredictLength < NoOfWordtoReturn) {
@@ -215,6 +281,7 @@ if (n>=1) {
       Pwords<-rbind(Pwords,head(UniWordsHigh,1))
   }
   else
+    #Order the highest probability first
     setorder(Pwords,colS=-Prob)
   return(Pwords)
   

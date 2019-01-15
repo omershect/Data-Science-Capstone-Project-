@@ -38,6 +38,9 @@ en_US.Blogs <- readLines(con = "./data/final/en_US/en_US.blogs.txt",encoding = "
 en_US.news <- readLines(con = "./data/final/en_US/en_US.news.txt",encoding = "UTF-8")
 en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt",encoding = "UTF-8")
 
+#Load Bad Words list 
+
+Bad_Words <- readLines(con = "./data/base-list-of-bad-words_text-file_2018_07_30.txt",encoding = "UTF-8")
 
 #################################################
 # Sample the data and split to train and test.  #
@@ -67,10 +70,10 @@ rm(Sample.Text)
 #Split the data into train and test sets
 n = nrow(DF)
 set.seed(101)
-trainIndex = sample(1:n, size = round(0.9*n), replace=FALSE)
-train = DF[trainIndex ,]
-test = DF[-trainIndex ,]
-
+#trainIndex = sample(1:n, size = round(0.9*n), replace=FALSE)
+#train = DF[trainIndex ,]
+#test = DF[-trainIndex ,]
+train<-DF
 #Clean memory 
 rm(DF)
 
@@ -90,8 +93,7 @@ corp <- corpus(train)
 
 rm(train)
 
-#save test data for validation 
-save(test, file="test_data.rda")
+
 #Remove all non English words 
 corp<-corpus(iconv(texts(corp), from = "UTF-8", to = "ASCII", sub = ""))
 
@@ -122,7 +124,7 @@ rm(Text.Sentences)
 # Create Uni Gram                            #
 #                                            #
 ##############################################
-uni_DFM <- dfm(stemed_words)
+uni_DFM <- dfm(stemed_words,remove=Bad_Words)
 print("Complete Creating Uni DFM")
 #Trim to Words with Priority higher than 2
 uni_DFM <- dfm_trim(uni_DFM, min_termfreq=3)
@@ -163,7 +165,7 @@ rm(uni_words)
 ##############################################
 
 bi_gram <- tokens_ngrams(stemed_words, n = 2)
-bi_DFM <- dfm(bi_gram)
+bi_DFM <- dfm(bi_gram,remove=Bad_Words)
 rm(bi_gram)
 print("Bi DFM ")
 #Trim - Keep only items with frequancy above 2
@@ -209,7 +211,7 @@ print("complete 3  ngrams")
 
 
 
-tri_DFM <- dfm(tri_gram)
+tri_DFM <- dfm(tri_gram,remove=Bad_Words)
 rm(tri_gram)
 print("Tri DFM ")
 
@@ -257,7 +259,7 @@ print("Complete Save tri words")
 four_gram<- tokens_ngrams(stemed_words, n = 4)
 print("complete 4  ngrams")
 
-four_DFM <- dfm(four_gram)
+four_DFM <- dfm(four_gram,remove=Bad_Words)
 print("four DFM ")
 
 rm(four_gram)
@@ -304,7 +306,7 @@ rm(four_words)
 five_gram<- tokens_ngrams(stemed_words, n = 5)
 print("complete 5  ngrams")
 
-five_DFM <- dfm(five_gram)
+five_DFM <- dfm(five_gram,remove=Bad_Words)
 print("five DFM ")
 rm(five_gram)
 
