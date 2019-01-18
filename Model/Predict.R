@@ -55,6 +55,9 @@ Predict_Simple_Back_of <- function(str,NoOfWordtoReturn =5){
   #Remove non-English characters
   str<-iconv(str, from = "UTF-8", to = "ASCII", sub = "")
   
+  #Replace all multiple spaces by one space 
+  str<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", str, perl=TRUE)
+  
   #Calculate the length of the sentence
   n<-sapply(strsplit(str," "), length)
    
