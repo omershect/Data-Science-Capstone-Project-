@@ -14,10 +14,17 @@ library(shiny)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output,session) {
 
-  source("E:/Elements/Coursera/Data Sciense/Course 10 Capstone project/Week 3/Model/Predict.R")
+source("E:/Elements/Coursera/Data Sciense/Course 10 Capstone project/Week 3/Model/Predict.R")
+  
+  #observeEvent(input$button, {
+  #  input$TextIn
+  #})
+  
   
   TextIn<-reactive({
-      input$TextIn
+     
+    
+    input$TextIn
     })
 
 

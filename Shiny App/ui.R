@@ -5,18 +5,22 @@
 
 #
 
+
 library(shiny)
+library(shinydashboard)
+
+if (interactive()) {
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
   
   # Application title
   sidebarPanel(
-    titlePanel("Preict Next Word"),
+    titlePanel("Predict Next Word"),
     textInput("TextIn", "Input the Sentence"),
-    verbatimTextOutput("value"),
+    verbatimTextOutput("value")
     #Submit button - control the changes       
-    submitButton("Process Data")
+    #submitButton("Process Data")
   ),
   mainPanel(
     titlePanel("Next Word - Three Options:"),
@@ -26,4 +30,5 @@ shinyUI(fluidPage(
   
   
   )
-)
+ )
+}
