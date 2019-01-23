@@ -31,14 +31,29 @@ library(shinydashboard)
     ),
     dashboardBody(
       
-   
+      
       
       fluidRow(
+          
           infoBox(
-          title = "Next Word 1",
+          title = "Next Word Top Probabilty word",
+          width = 7,
+          color = "blue",
           icon = icon("file-word"),
-          textOutput("Words_Results")
+          textOutput("Words_Results1")
 
+        )),
+      
+      
+      fluidRow(
+        
+        infoBox(
+          title = "Next Word Lower Probabilty words",
+          width = 7,
+          color = "green",
+          icon = icon("file-word"),
+          textOutput("Words_Results2")
+          
         ))
       
     )
