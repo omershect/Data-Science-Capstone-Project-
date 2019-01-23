@@ -9,26 +9,42 @@
 library(shiny)
 library(shinydashboard)
 
-if (interactive()) {
 
-# Define UI for application that draws a histogram
-shinyUI(fluidPage(
+
+
+#if (interactive()) {
   
-  # Application title
-  sidebarPanel(
-    titlePanel("Predict Next Word"),
-    textInput("TextIn", "Input the Sentence"),
-    verbatimTextOutput("value")
-    #Submit button - control the changes       
-    #submitButton("Process Data")
-  ),
-  mainPanel(
-    titlePanel("Next Word - Three Options:"),
-    textOutput("Words_Results")
-     
+  ui <- dashboardPage(skin = "red",
+    dashboardHeader(
+      title = "Predict Next Word",
+      titleWidth = 450
+    ),
+    dashboardSidebar(
+      # Custom CSS to hide the default logout panel
+      tags$head(tags$style(HTML('.shiny-server-account { display: none; }'))),
+      textInput("TextIn", "Input the Sentence"),
+      verbatimTextOutput("value"),
+      
+      # The dynamically-generated user panel
+      uiOutput("userpanel"),
+      actionButton("do", "Predict")
+    ),
+    dashboardBody(
+      
+   
+      
+      fluidRow(
+          infoBox(
+          title = "Next Word 1",
+          icon = icon("file-word"),
+          textOutput("Words_Results")
+
+        ))
+      
+    )
   )
+
   
-  
-  )
- )
-}
+
+
+
