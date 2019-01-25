@@ -1,4 +1,5 @@
 
+Sys.setenv(JAVA_HOME="C:/Program Files/Java/jre1.8.0_201/")
 
 #Load libraries 
 library(kableExtra)
@@ -8,9 +9,12 @@ library(ggplot2)
 library(quanteda)
 library(data.table)
 library(stringi)
-
+library(stringr)
+library(qdap)
 
 memory.limit(size = 100000) 
+
+
 
 
 ##############################################
@@ -37,10 +41,15 @@ if(!file.exists("./data/Coursera-SwiftKey.zip")) {
 en_US.Blogs <- readLines(con = "./data/final/en_US/en_US.blogs.txt",encoding = "UTF-8")
 en_US.news <- readLines(con = "./data/final/en_US/en_US.news.txt",encoding = "UTF-8")
 en_US.twitter <- readLines(con = "./data/final/en_US/en_US.twitter.txt",encoding = "UTF-8")
-
+                           
+#Split the lines into sentences (based on . ? )                          
+en_US.twitter<-unlist(strsplit(en_US.twitter, "(?<=[[:punct:,^\\,]])\\s(?=[A-Z])", perl=T))
+en_US.news<-unlist(strsplit(en_US.news, "(?<=[[:punct:,^\\,]])\\s(?=[A-Z])", perl=T))
+en_US.Blogs<-unlist(strsplit(en_US.Blogs, "(?<=[[:punct:,^\\,]])\\s(?=[A-Z])", perl=T))
 #Load Bad Words list 
 
 Bad_Words <- readLines(con = "./data/base-list-of-bad-words_text-file_2018_07_30.txt",encoding = "UTF-8")
+
 
 #################################################
 # Sample the data and split to train and test.  #
@@ -49,17 +58,29 @@ Bad_Words <- readLines(con = "./data/base-list-of-bad-words_text-file_2018_07_30
 
 
 
+
 sample_rate<-100/100
 sample_tweet_rate<-100/100
 set.seed(121)
-Sample.Text<-c(en_US.Blogs,en_US.news,en_US.twitter)
+Sample.Text<-c(sample(en_US.Blogs,length(en_US.Blogs) * (sample_rate),replace = FALSE),
+               sample(en_US.news,length(en_US.news) * (sample_rate),replace = FALSE),
+               sample(en_US.twitter,length(en_US.twitter) * (sample_tweet_rate),replace = FALSE))
 
-#Clean memory 
 rm(en_US.Blogs)
 rm(en_US.news)
 rm(en_US.twitter) 
-
 print("Complete Loading data")
+
+Sample.Text<-bracketX(Sample.Text)
+print("Complete bracket")
+
+#Sample.Text2<-replace_number(Sample.Text1)
+Sample.Text<-replace_contraction(Sample.Text)
+
+print("Complete contraction")
+Sample.Text<-replace_symbol(Sample.Text)
+
+print("Complete First cleaning")
 
 
 
@@ -127,7 +148,7 @@ rm(Text.Sentences)
 uni_DFM <- dfm(stemed_words,remove=Bad_Words)
 print("Complete Creating Uni DFM")
 #Trim to Words with Priority higher than 2
-uni_DFM <- dfm_trim(uni_DFM, min_termfreq=3)
+uni_DFM <- dfm_trim(uni_DFM, min_termfreq=2)
 print("Trim Uni Gram")
 
 #Calculate the Col Sum 
@@ -169,7 +190,7 @@ bi_DFM <- dfm(bi_gram,remove=Bad_Words)
 rm(bi_gram)
 print("Bi DFM ")
 #Trim - Keep only items with frequancy above 2
-bi_DFM <- dfm_trim(bi_DFM, min_termfreq=3)
+bi_DFM <- dfm_trim(bi_DFM, min_termfreq=2)
 print("Complete Trim")
 # Create named vectors with counts of words 
 sums_B <- colSums(bi_DFM)
@@ -216,7 +237,7 @@ rm(tri_gram)
 print("Tri DFM ")
 
 
-tri_DFM <- dfm_trim(tri_DFM, min_termfreq=3)
+tri_DFM <- dfm_trim(tri_DFM, min_termfreq=2)
 print("Complete 3 Grams trim")
 
 # Create named vectors with counts of words 
@@ -264,7 +285,7 @@ print("four DFM ")
 
 rm(four_gram)
 
-four_DFM <- dfm_trim(four_DFM, min_termfreq=3)
+four_DFM <- dfm_trim(four_DFM, min_termfreq=2)
 print("Complete Trim 4 grams")
 
 # Create named vectors with counts of words 
@@ -310,7 +331,7 @@ five_DFM <- dfm(five_gram,remove=Bad_Words)
 print("five DFM ")
 rm(five_gram)
 
-five_DFM <- dfm_trim(five_DFM, min_termfreq=3)
+five_DFM <- dfm_trim(five_DFM, min_termfreq=2)
 print("Complete trimming  5 ngrams")
 
 # Create named vectors with counts of words 
