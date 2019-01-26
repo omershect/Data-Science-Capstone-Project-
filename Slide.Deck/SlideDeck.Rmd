@@ -1,0 +1,93 @@
+---
+title: "Predict Next Word - Capstone Project"
+author: "Omer Shechter"
+date: "25 January 2019"
+output:
+      revealjs::revealjs_presentation:
+        theme: sky
+        highlight: pygments
+        center: false
+        transition: none
+        progress: true
+       
+  
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+## Project Summary  
+
+<style>
+
+/* slide titles */
+.reveal h3 { 
+  font-size: 40px;
+  color: blue;
+}
+
+.reveal h2 { 
+  font-size: 50px;
+  color: black;
+}
+
+/* heading for slides with two hashes ## */
+.reveal .slides section .slideContent h2 {
+   font-size: 40px;
+   
+   color: black;
+}
+
+/* ordered and unordered list styles */
+.reveal ul, 
+.reveal ol {
+    font-size: 22px;
+    color: blue;
+    list-style-type: square;
+}
+
+</style>
+
+
+* This project is about understanding and building a predictive text model
+* The goal is to use Text Data set from Blogs, News and Twitter and create an NLP Model
+* The outcome is to get a sentence or a string and predict the next word
+* The Last step is to build a data Product using Shiny APP that will illustrate the Prediction 
+
+![title](NLP.png)
+
+
+## The Algorithm 
+
+* The Algorithm used is Stupid Backoff
+* All data is used (except from Twitter data - 85%)
+* Data cleaning actions were done (e.g. Remove symbols, Numbers, Punctuations) 
+* 1:5 sets of Ngrams were created 
+* Data was trimmed based on frequency to save memory space 
+* The following R packages were used: quanteda, data.table, qdap
+* Stupid Backoff briefly explained below :
+
+![title](Stuiped Backoff.png)
+
+
+## Next Word Predict - The Application
+
+* The Application is a Shiny Application 
+* Type a sentence in the slide bar (at the left)
+* Push the Predict button
+* The next word will be shown in the blue Window 
+* 4 Lower Priority options are displayed in the green window
+
+![title](NextWordApp.png)
+
+
+## Links
+
+  
+* Shiny APP Io [ Shiny App link](https://omersect.shinyapps.io/shiny_app/)
+* This Slide Deck [ Link Rpub slides deck](http://rpubs.com/omers/461619)
+* Github repository [ Link to Github ](https://github.com/omershect/Data-Science-Capstone-Project-)
