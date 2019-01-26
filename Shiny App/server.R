@@ -8,23 +8,46 @@
 #
 
 library(shiny)
-source("E:/Elements/Coursera/Data Sciense/Course 10 Capstone project/Week 3/Model/Predict.R")
+library(shinyjs)
+
 
 
 # Define server logic required to draw a histogram
-shinyServer(function(input, output,session) {
+shinyServer(function(input, output) {
 
-
+  rv <- reactiveValues()
+  rv$setupComplete <- FALSE 
   
-  #observeEvent(input$button, {
-  #  input$TextIn
-  #})
+  
+  
+  ## simulate data load
+  {
+    
+     #Loading the Data - first Time 
+     source("Predict.R")
+      
+     
+      ## set my condition to TRUE
+      rv$setupComplete <- TRUE
+    
+    
+    ## the conditional panel reads this output
+    output$setupComplete <- reactive({
+      return(rv$setupComplete)
+    })
+    outputOptions(output, 'setupComplete', suspendWhenHidden=FALSE)
+    
+  }
+  
+  
+  
+
   
   #observeEvent(input$do, {     
   res<-eventReactive(input$do,{
      str<-input$TextIn
      if (str!="")
-      Predict_Words(str)
+      Predict_Words(str,5)
   })
  
 
@@ -55,7 +78,7 @@ shinyServer(function(input, output,session) {
   output$Words_Results2<-renderText({   
     data<-words()
     #data<-paste(unlist(data), collapse=' ')
-    unlist(data[2:3])
+    unlist(data[2:5])
   }) 
   
 })

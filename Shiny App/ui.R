@@ -8,6 +8,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
 
 
 
@@ -32,11 +33,11 @@ library(shinydashboard)
     dashboardBody(
       
       
-      
+      conditionalPanel(condition = "output.setupComplete",    
       fluidRow(
           
           infoBox(
-          title = "Next Word Top Probabilty word",
+          title = "Top Probability word",
           width = 7,
           color = "blue",
           icon = icon("file-word"),
@@ -48,18 +49,30 @@ library(shinydashboard)
       fluidRow(
         
         infoBox(
-          title = "Next Word Lower Probabilty words",
+          title = "Lower Probability words",
           width = 7,
           color = "green",
           icon = icon("file-word"),
           textOutput("Words_Results2")
           
-        ))
+        ))),
+      conditionalPanel(condition = "!output.setupComplete",
+                       
+                       fluidRow(
+                         
+                         infoBox(
+                           title = "Loading",
+                           width = 7,
+                           color = "blue",
+                           icon = icon("spinner")
+                           
+                           
+                         )))                      
       
+    
     )
-  )
 
-  
+  ) 
 
 
 
