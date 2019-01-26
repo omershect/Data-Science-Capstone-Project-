@@ -60,7 +60,7 @@ Bad_Words <- readLines(con = "./data/base-list-of-bad-words_text-file_2018_07_30
 
 
 sample_rate<-100/100
-sample_tweet_rate<-100/100
+sample_tweet_rate<-85/100
 set.seed(121)
 Sample.Text<-c(sample(en_US.Blogs,length(en_US.Blogs) * (sample_rate),replace = FALSE),
                sample(en_US.news,length(en_US.news) * (sample_rate),replace = FALSE),
@@ -148,7 +148,7 @@ rm(Text.Sentences)
 uni_DFM <- dfm(stemed_words,remove=Bad_Words)
 print("Complete Creating Uni DFM")
 #Trim to Words with Priority higher than 2
-uni_DFM <- dfm_trim(uni_DFM, min_termfreq=2)
+uni_DFM <- dfm_trim(uni_DFM, min_termfreq=3)
 print("Trim Uni Gram")
 
 #Calculate the Col Sum 
@@ -190,7 +190,7 @@ bi_DFM <- dfm(bi_gram,remove=Bad_Words)
 rm(bi_gram)
 print("Bi DFM ")
 #Trim - Keep only items with frequancy above 2
-bi_DFM <- dfm_trim(bi_DFM, min_termfreq=2)
+bi_DFM <- dfm_trim(bi_DFM, min_termfreq=3)
 print("Complete Trim")
 # Create named vectors with counts of words 
 sums_B <- colSums(bi_DFM)
@@ -237,7 +237,7 @@ rm(tri_gram)
 print("Tri DFM ")
 
 
-tri_DFM <- dfm_trim(tri_DFM, min_termfreq=2)
+tri_DFM <- dfm_trim(tri_DFM, min_termfreq=3)
 print("Complete 3 Grams trim")
 
 # Create named vectors with counts of words 
@@ -285,7 +285,7 @@ print("four DFM ")
 
 rm(four_gram)
 
-four_DFM <- dfm_trim(four_DFM, min_termfreq=2)
+four_DFM <- dfm_trim(four_DFM, min_termfreq=3)
 print("Complete Trim 4 grams")
 
 # Create named vectors with counts of words 
@@ -331,7 +331,7 @@ five_DFM <- dfm(five_gram,remove=Bad_Words)
 print("five DFM ")
 rm(five_gram)
 
-five_DFM <- dfm_trim(five_DFM, min_termfreq=2)
+five_DFM <- dfm_trim(five_DFM, min_termfreq=3)
 print("Complete trimming  5 ngrams")
 
 # Create named vectors with counts of words 

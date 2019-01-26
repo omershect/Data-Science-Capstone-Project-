@@ -1,10 +1,8 @@
 #Load libraries 
-library(dplyr)
-library(tidytext)
-library(ggplot2)
+
 library(quanteda)
 library(data.table)
-library(stringi)
+
 
 setwd("E:/Elements/Coursera/Data Sciense/Course 10 Capstone project/Week 3/Model/")
 
@@ -226,39 +224,75 @@ if (n>=1) {
   }
  }
 
+ PredictLength<-PredictLength+Words3_length 
 
 
-
-  #############################
-  #Combine all search results #
-  #                           #
-  #############################
+ #############################
+ #Combine all search results #
+ #                           #
+ #############################
  
-  Pwords<-""
-  
-  if(Words5_length>0)
-    Pwords<-Words5
-  
-  if(Words4_length>0)
-    if(class(Pwords)!="data.frame")
-      Pwords<-Words4
-    else
-      Pwords<-rbind(Pwords,Words4)
-  
-  if(Words3_length>0)
-    if(class(Pwords)!="data.frame")
-      Pwords<-Words3
-    else
-      Pwords<-rbind(Pwords,Words3)
-  
-  if(Words2_length>0)
-    if(class(Pwords)!="data.frame")
-      Pwords<-Words2
-  else
+ Pwords<-""
+ 
+ if(Words5_length>0)
+   Pwords<-Words5
+ 
+ if(Words4_length>0){
+   if(class(Pwords)[1]!="data.table")
+     Pwords<-Words4
+   else
+     Pwords<-rbind(Pwords,Words4)
+   
+   Pwords<-Pwords[!duplicated(Pwords$word),]
+   if (dim(Pwords)[1] >= NoOfWordtoReturn)
+   {
+     setorder(Pwords,colS=-Prob)
+     return(Pwords[1:NoOfWordtoReturn,])
+   }
+ }
+ 
+ if(Words3_length>0) {
+   
+   if(class(Pwords)[1]!="data.table")
+     Pwords<-Words3
+   else
+     Pwords<-rbind(Pwords,Words3)
+   
+   Pwords<-Pwords[!duplicated(Pwords$word),]
+   if (dim(Pwords)[1] >= NoOfWordtoReturn)
+   {
+     setorder(Pwords,colS=-Prob)
+     return(Pwords[1:NoOfWordtoReturn,])
+   }
+   
+   
+ }
+ 
+ if(Words2_length>0) {
+   if(class(Pwords)[1]!="data.table")
+     Pwords<-Words2
+   else
      Pwords<-rbind(Pwords,Words2)
-  
-  if(PredictLength>0)
-    Pwords<-Pwords[!duplicated(Pwords$word),]
+   
+   Pwords<-Pwords[!duplicated(Pwords$word),]
+   if (dim(Pwords)[1] >= NoOfWordtoReturn)
+   {
+     setorder(Pwords,colS=-Prob)
+     return(Pwords[1:NoOfWordtoReturn,])
+   }
+   
+ }
+ 
+ if(PredictLength>0) {
+   Pwords<-Pwords[!duplicated(Pwords$word),]
+   Pwords<-Pwords[!duplicated(Pwords$word),]
+   if (dim(Pwords)[1] >= NoOfWordtoReturn)
+   {
+     setorder(Pwords,colS=-Prob)
+     return(Pwords[1:NoOfWordtoReturn,])
+   }
+   
+ }
   
   #######################################
   # 1 Gram                              #
@@ -293,11 +327,11 @@ if (n>=1) {
 
 
 
-Predict_Words <- function(str){
+Predict_Words <- function(str,NoOfWords=3){
   
 
-Words<-Predict_Simple_Back_of(str)
-res<-select(Words,word)[1:3,]
+Words<-Predict_Simple_Back_of(str,NoOfWords)
+res<-select(Words,word)[1:NoOfWords,]
 return ((res))
 
 
